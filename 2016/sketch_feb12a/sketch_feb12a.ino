@@ -1,0 +1,90 @@
+ 
+const int SR_SER_PIN = 2;
+const int SR_LCH_PIN = 1;
+const int SR_CLK_PIN = 0;
+
+const int DC_RST_PIN = 3;
+const int DC_CLK_PIN = 4;
+
+int shiftCnt = 0;
+int clockCnt = 0;
+int strLength = 0;
+
+char data01[] = "          *   *                                    ";
+char data02[] = "          ** **                                    ";
+char data03[] = "          * * *       *  *                         ";
+char data04[] = "          *   *  **  *** *    *  **   ***          ";
+char data05[] = "          *   *    *  *  *         * *             ";
+char data06[] = "          *   *  ***  *  ***  *  ***  **           ";
+char data07[] = "          *   * *  *  *  *  * * *  *    *          ";
+char data08[] = "          *   *  ***  *  *  * *  *** ***           ";
+
+//char data11[] = "           ****                                   ";
+//char data12[] = "          *                                       ";
+//char data13[] = "          *     *                *   *            ";
+//char data14[] = "           ***  *    *       **  *   *            ";
+//char data15[] = "              * *              * *   *            ";
+//char data16[] = "              * ***  * ***   *** *   *            ";
+//char data17[] = "              * *  * * *  * *  * *   *            ";
+//char data18[] = "          ****  *  * * *  *  ***  **  **          ";
+
+char* data0[8] = { data01, data02, data03, data04, data05, data06, data07, data08 };
+//char* data1[8] = { data11, data12, data13, data14, data15, data16, data17, data18 };
+
+void setup() {
+  for(int i = 0; i < 5; i++) {
+    pinMode(i, OUTPUT);
+    digitalWrite(i, LOW);
+  }
+  dcReset();
+}
+
+void loop() {
+  draw(data0);
+  //draw(data1);
+}
+
+void draw(char** data) {
+  for(int o = 0; o < strlen(data[0]); o++) { //offset
+    for(int t = 0; t < 10; t++) { //delay
+      for(int y = 0; y < 10; y++) { //each column
+        byte b = B00000000;
+        for(int x = 0; x < 8; x++) { //each row
+          char c = data[x][y + o];
+          if(c == ' ') {
+            bitWrite(b, x, LOW);
+          } else {
+            bitWrite(b, x, HIGH);
+          }
+        }
+        shiftOut(SR_SER_PIN, SR_CLK_PIN, MSBFIRST, b);
+        srLatch();
+        //delayMicroseconds(500);
+        shiftOut(SR_SER_PIN, SR_CLK_PIN, MSBFIRST, B00000000);
+        srLatch();
+        dcClock();
+      }
+    }
+  }
+}
+
+void srClock() {
+  digitalWrite(SR_CLK_PIN, HIGH);
+  digitalWrite(SR_CLK_PIN, LOW);
+}
+
+void srLatch() {
+  digitalWrite(SR_LCH_PIN, HIGH);
+  digitalWrite(SR_LCH_PIN, LOW);
+}
+
+void dcClock() {
+  digitalWrite(DC_CLK_PIN, HIGH);
+  digitalWrite(DC_CLK_PIN, LOW);
+}
+
+void dcReset() {
+  digitalWrite(DC_RST_PIN, HIGH);
+  digitalWrite(DC_RST_PIN, LOW);
+}
+
